@@ -155,7 +155,7 @@ class Seq(list):
                 pos2num[idx] += 1
         ob_len = len(self)
         pos_to_erase = []
-        for k, v in pos2num.iteritems():
+        for k, v in pos2num.items():
             if v == ob_len:
                 pos_to_erase.append(k)
         pos_to_erase.sort(reverse=True)
@@ -180,7 +180,7 @@ class Seq(list):
     def type(self):
         seq_len = 0
         c = Counter(self[0].seq.lower())
-        for k, v in c.iteritems():
+        for k, v in c.items():
             if k != '-':
                 seq_len += v
         if (c['a'] + c['c'] + c['g'] + c['t'] + c['u']) / float(seq_len) < 0.4:
