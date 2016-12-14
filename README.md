@@ -2,23 +2,23 @@
 Multiple Sequence Alignment Editing
 
 # Description
-SEQLIM is a python script for manipulating biological sequences. It enables concatenating and formatting Multiple Sequence Alignments.
+SEQLIM is a python script for manipulating biological sequences. It concatenates multiple sequence alignments (MSAs) and saves the concatenated MSA in various formats (fasta, phylip, nexus, msf, tsv, and csv).
  
 # Installation
 
 * Install Python 2.7 or higher, Python installers are available at https://www.python.org/.
-* Download seqlim.py somewhere in your `PATH`, and test it.
+* Clone or download this repo, make `seqlim.py` executable, add its path to your `PATH`, and test it.
 ```
 $ seqlim.py -h
 ```
-* Or move to a folder where seqlim.py is in and use `python` command.
+* Or go to a directory with seqlim.py, and use with `python` command.
 ```
 $ python seqlim.py -h
 ```
 
 # Examples
 
-* Suppose that there are two files in FASTA format at `./test/fasta`.
+* Suppose two sequence files in FASTA format in `./test/fasta`.
  
  
 `Locus1.fasta`
@@ -49,7 +49,7 @@ UGUGGUGGCGAUAGCGAGAAGGAUACACCUGUUCCCAUGCCGAACACAGAAGUUAAGCUA
 GCGCCGAUUGUAGUGAAGGGUUUCCCUUUGUGAGAGUAGG--ACGUCGCCACGC
 ``` 
 
-* Concatenate these files vertically.
+* Concatenate the files vertically.
 
 ```
 $ seqlim.py catv ./test/fasta
@@ -107,12 +107,12 @@ Enteroc1     UGUGG UGGCG AUAGC GAGAA GGAUA CACCU GUUCC CAUGC CGAAC ACAGA
 $ seqlim.py -o ./test/temp/concatenated.fasta cath ./test/fasta
 ```
  
-* Just convert a sequence format to another.
+* Just format conversion.
 ```
 $ seqlim.py -outfmt phylip -o ./test/temp/converted.phylip cnvt ./test/fasta/locus1.fasta
 ``` 
  
-* Convert all sequence files in `./test/fasta` to another format (PHYLIP) and save them in `./test/phylip`.
+* Convert all sequence files in `./test/fasta` to another format (phylip) and save them in `./test/phylip`.
 ```
 $ seqlim.py -o ./test/phylip -outfmt phylip cnvt ./test/fasta
 ``` 
