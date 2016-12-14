@@ -63,7 +63,7 @@ UAGCGCCGAUGGUAGUGUGGGGUCUCCCCAUGCGAGAGUAGGGAACU--GCCAGGC
 UAGCGCCGAUUGUAGUGAAGGGUUUCCCUUUGUGAGAGUAGG--ACGUCGCCACGC
 ``` 
 
-* Set alternative input sequence format after `-infmt`. SEQLIM accepts `.phylip`, `.phy`, or `.ph` for PHYLIP format; `.nexus`, `.nex`, or `.nxs` for NEXUS format.
+* Set alternative input sequence format after `-infmt`. SEQLIM accepts `phylip`, `phy`, or `ph` for PHYLIP format; `nexus`, `nex`, or `nxs` for NEXUS format.
 
 ```
 $ seqlim.py cath ./phylip -infmt phylip
@@ -88,9 +88,9 @@ Enteroc1     UGUGGUGGCG AUAGCGAGAA GGAUACACCU GUUCCCAUGC CGAACACAGA AGUUAAGCUA
              GCGCCGAUUG UAGUGAAGGG UUUCCCUUUG UGAGAGUAGG --ACGUCGCC ACGC
 ```
  
-* The line and block lengths of sequences can be set after `-ll` and `-bl`, respectively.
+* The line and block lengths of sequences can be adjusted using `-line\_length` and `-block\_length`, respectively.
 ```
-$ python seqlim.py ./fasta -outfmt phylip -ll 50 -bl 5
+$ python seqlim.py ./fasta -outfmt phylip -line_length 50 -block_length 5
  2 114
 Escheri1     CCUGG CGGCC GUAGC GCGGU GGUCC CACCU GACCC CAUGC CGAAC UCAGA
 Enteroc1     UGUGG UGGCG AUAGC GAGAA GGAUA CACCU GUUCC CAUGC CGAAC ACAGA
@@ -114,6 +114,6 @@ $ seqlim.py cnvt ./fasta/locus1.fasta -outfmt phylip -o converted.phylip
  
 * Convert all sequence files in `./fasta` to another format (PHYLIP) and save them in `./phylip`.
 ```
-$ seqlim.py cnvt ./fasta/ -d ./phylip -outfmt phylip
+$ seqlim.py cnvt ./fasta/ -o ./phylip -outfmt phylip
 ``` 
  
