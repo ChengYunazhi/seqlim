@@ -214,7 +214,7 @@ class Seq(list):
         seq_offset = max_tag_len + 3
         oh.write(' %s %s\n' % (seq_num, seq_len))
         FROM = 0
-        for i in range(int(np.ceil(float(seq_len) / line_len))):
+        for i in range(int(math.ceil(float(seq_len) / line_len))):
             for j in range(seq_num):
                 if i:
                     oh.write(' '*seq_offset)
@@ -244,25 +244,15 @@ class Seq(list):
         max_tag_len=10, line_len=60, block_len=10, quiet=True
     ):
         outfmt = outfmt.lower()
-        if outfmt == 'phylip':
-            tags, seqs = self.format_seqs(max_tag_len, line_len, block_len)
-            seq_len = len(self[0].seq)
-            seq_offset = max_tag_len + 3
+        if outfmt in ('phylip', 'phy'):
+            self.write_phylip(
+                oh,
+                max_tag_len=max_tag_len,
+                line_len=line_len,
+                block_len=block_len
+            )
+
             
-            oh.write(' %s %s\n' % (len(self), seq_len))
-
-            block_num = int(line_len/block_len)
-            for i in range(int(math.ceil(float(seq_len) / line_len))):
-                for j in range(len(self)):
-                    if i:
-                        oh.write(' '*seq_offset)
-                    else:
-                        oh.write(tags[j]+' '*(seq_offset-len(tags[j])))
-                    oh.write(
-                        ' '.join(seqs[j][i*block_num:(i+1)*block_num])+'\n'
-                        )
-                oh.write('\n')
-
         elif outfmt == 'tsv':
             for ob in self:
                 oh.write(ob.tag+'\t'+ob.seq+'\n')
@@ -272,16 +262,10 @@ class Seq(list):
                 oh.write(ob.tag+','+ob.seq+'\n')
 
         elif outfmt in ('fasta', 'fas', 'mfa', 'fna'):
-            for ob in self:
-                l = '>'+ob.tag+'\n'
-                i = 0
-                while 1:
-                    frag = ob.seq[i:i+line_len]
-                    if not frag:
-                        break
-                    l += frag+'\n'
-                    i += line_len
-                oh.write(l)
+            self.write_fasta(
+                oh,
+                line_len=line_len,
+            )
 
         elif outfmt in ('nex', 'nxs', 'nexus'):
             seqs = []
@@ -361,7 +345,6 @@ class Seq(list):
     def format_seqs(self, max_tag_len, line_len, block_len):
         tags, seqs = [], []
         for o in self:
-            tags.append(o.tag[:max_tag_len])
             curr_seq_len = len(o.seq)
             if curr_seq_len > line_len:
                 row_len = curr_seq_len
@@ -413,27 +396,10 @@ class Seq(list):
             newseq.add(obs[0][i].tag, seq)
         return newseq
 
- 
-class Seq(Seq):
-    def write_seq(self, outfile, outfmt, block_len, line_len, rm=None):
-        if rm:
-            self.rm(rm) # remove residues
+    @staticmethod
+    def chunks(S, n):
+        return [S[c:c+n] for c in range(0, len(S), n)]
 
-        # style seq output 
-        if outfile:
-            if not outfmt:
-                outfmt = args.o.name.split('.')[-1]
-            with open(outfile, 'w') as ofh:
-                self.write(
-                    ofh, outfmt=outfmt,
-                    block_len=block_len, line_len=line_len,
-                    quiet=False
-            )   
-        else:
-            self.write(
-                sys.stdout, outfmt=outfmt,
-                block_len=block_len, line_len=line_len
-            )
 
 
 if __name__ == '__main__':
@@ -475,6 +441,29 @@ if __name__ == '__main__':
     par.add_argument('-inexts', metavar='inexts', nargs='+')
     args = par.parse_args()
 
+    class Seq(Seq):
+        def write_seq(self, outfile, outfmt, block_len, line_len, rm=None):
+            if rm:
+                self.rm(rm) # remove residues
+
+            # style seq output 
+            if outfile:
+                if not outfmt:
+                    outfmt = args.o.name.split('.')[-1]
+                with open(outfile, 'w') as ofh:
+                    self.write(
+                        ofh, outfmt=outfmt,
+                        block_len=block_len, line_len=line_len,
+                        quiet=False
+                )   
+            else:
+                self.write(
+                    sys.stdout, outfmt=outfmt,
+                    block_len=block_len, line_len=line_len
+                )
+
+
+
     if args.a == 'cnvt': # convert
         if os.path.isdir(args.i):
             if not args.o:
@@ -503,7 +492,7 @@ if __name__ == '__main__':
         for path, subpath in Path.listfiles_r(args.i, exts=args.inexts):
             with open(path) as f:
                 s.extend(Seq.parse(f))
-            s.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
+        s.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
         
     elif args.a == 'cath' and os.path.isdir(args.i):
         seq = Seq.cath_files([e[0] for e in Path.listfiles_r(args.i, exts=args.inexts)])
