@@ -18,7 +18,7 @@ $ python seqlim.py -h
 
 # Examples
 
-* Suppose that there are two files in FASTA format at `./fasta`.
+* Suppose that there are two files in FASTA format at `./test/fasta`.
  
  
 `Locus1.fasta`
@@ -40,7 +40,7 @@ $ python seqlim.py -h
 * Concatenate these files horizontally.
 
 ```
-$ seqlim.py cath ./fasta
+$ seqlim.py cath ./test/fasta
 >Escheri1
 CCUGGCGGCCGUAGCGCGGUGGUCCCACCUGACCCCAUGCCGAACUCAGAAGUGAAACUA
 GCGCCGAUGGUAGUGUGGGGUCUCCCCAUGCGAGAGUAGGGAACU--GCCAGGC
@@ -52,7 +52,7 @@ GCGCCGAUUGUAGUGAAGGGUUUCCCUUUGUGAGAGUAGG--ACGUCGCCACGC
 * Concatenate these files vertically.
 
 ```
-$ seqlim.py catv ./fasta
+$ seqlim.py catv ./test/fasta
 >Escheri1
 CCUGGCGGCCGUAGCGCGGUGGUCCCACCUGACCCCAUGCCGAACUCAGAAGUGAAAC
 >Enteroc1
@@ -66,7 +66,7 @@ UAGCGCCGAUUGUAGUGAAGGGUUUCCCUUUGUGAGAGUAGG--ACGUCGCCACGC
 * Set alternative input sequence format after `-infmt`. SEQLIM accepts `phylip`, `phy`, or `ph` for PHYLIP format; `nexus`, `nex`, or `nxs` for NEXUS format.
 
 ```
-$ seqlim.py cath ./phylip -infmt phylip
+$ seqlim.py -infmt phylip cath ./test/phylip
 >Escheri1
 CCUGGCGGCCGUAGCGCGGUGGUCCCACCUGACCCCAUGCCGAACUCAGAAGUGAAAC
 >Enteroc1
@@ -79,7 +79,7 @@ UAGCGCCGAUUGUAGUGAAGGGUUUCCCUUUGUGAGAGUAGG--ACGUCGCCACGC
  
 * Set output format after `-outfmt`.
 ``` 
-$ seqlim.py cath ./fasta -outfmt phylip
+$ seqlim.py -outfmt phylip cath ./test/fasta
  2 114
 Escheri1     CCUGGCGGCC GUAGCGCGGU GGUCCCACCU GACCCCAUGC CGAACUCAGA AGUGAAACUA
 Enteroc1     UGUGGUGGCG AUAGCGAGAA GGAUACACCU GUUCCCAUGC CGAACACAGA AGUUAAGCUA
@@ -90,7 +90,7 @@ Enteroc1     UGUGGUGGCG AUAGCGAGAA GGAUACACCU GUUCCCAUGC CGAACACAGA AGUUAAGCUA
  
 * The line and block lengths of sequences can be adjusted using `-line\_length` and `-block\_length`, respectively.
 ```
-$ python seqlim.py ./fasta -outfmt phylip -line_length 50 -block_length 5
+$ python seqlim.py -outfmt phylip -line_length 50 -block_length 5 cath ./test/fasta
  2 114
 Escheri1     CCUGG CGGCC GUAGC GCGGU GGUCC CACCU GACCC CAUGC CGAAC UCAGA
 Enteroc1     UGUGG UGGCG AUAGC GAGAA GGAUA CACCU GUUCC CAUGC CGAAC ACAGA
@@ -104,16 +104,16 @@ Enteroc1     UGUGG UGGCG AUAGC GAGAA GGAUA CACCU GUUCC CAUGC CGAAC ACAGA
 
 * Save an output.
 ``` 
-$ seqlim.py cath ./fasta -o concatenated.fasta
+$ seqlim.py -o ./test/temp/concatenated.fasta cath ./test/fasta
 ```
  
 * Just convert a sequence format to another.
 ```
-$ seqlim.py cnvt ./fasta/locus1.fasta -outfmt phylip -o converted.phylip
+$ seqlim.py -outfmt phylip -o ./test/temp/converted.phylip cnvt ./test/fasta/locus1.fasta
 ``` 
  
-* Convert all sequence files in `./fasta` to another format (PHYLIP) and save them in `./phylip`.
+* Convert all sequence files in `./test/fasta` to another format (PHYLIP) and save them in `./test/phylip`.
 ```
-$ seqlim.py cnvt ./fasta/ -o ./phylip -outfmt phylip
+$ seqlim.py -o ./test/phylip -outfmt phylip cnvt ./test/fasta
 ``` 
  
