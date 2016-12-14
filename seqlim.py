@@ -455,7 +455,7 @@ if __name__ == '__main__':
                         ofh, outfmt=outfmt,
                         block_len=block_len, line_len=line_len,
                         quiet=False
-                )   
+                    )   
             else:
                 self.write(
                     sys.stdout, outfmt=outfmt,
