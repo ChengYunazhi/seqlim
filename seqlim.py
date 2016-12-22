@@ -3,7 +3,6 @@
 import sys
 import os
 import errno
-import math
 from collections import defaultdict, OrderedDict, Counter
 
 
@@ -177,18 +176,19 @@ class Seq(list):
         for o in self:
             o.seq = o.seq.replace(char, '') 
 
-    def type(self):
+    def seq_type(self):
         seq_len = 0
         c = Counter(self[0].seq.lower())
         for k, v in c.items():
-            if k != '-':
+            if k not in ('-', 'x'):
                 seq_len += v
-        if (c['a'] + c['c'] + c['g'] + c['t'] + c['u']) / float(seq_len) < 0.4:
-            return 'Protein'
-        elif c['u']:
-            return 'RNA'
+        if (c['a'] + c['c'] + c['g'] + c['t'] + c['u']) / float(seq_len) > .8:
+            if c['u']:
+                return 'RNA'
+            else:
+                return 'DNA'
         else:
-            return 'DNA'
+            return 'Protein'
 
     def seq_len(self, raise_error=False):
         seqLen = 0
@@ -266,13 +266,11 @@ class Seq(list):
         elif outfmt in ('nex', 'nxs', 'nexus'):
             seqs = []
             tags = []
-            max_seq_len = 0
+            seq_len = len(self[0].seq)
+            seq_num = len(self)
             seq_offset = max_tag_len + 3
             for o in self:
                 tags.append(o.tag[:max_tag_len])
-                curr_seq_len = len(o.seq)
-                if curr_seq_len > max_seq_len:
-                    max_seq_len = curr_seq_len
                 count = 0
                 seq = []
                 while 1:
@@ -283,16 +281,16 @@ class Seq(list):
                     count += block_len
                 seqs.append(seq)
             block_num = int(line_len/block_len)
-            datatype=self.type().lower()
+            datatype=self.seq_type().lower()
             if not datatype:
                 sys.stderr.write('unknown datatype\n')
                 sys.exit(0)
             oh.write('#NEXUS\n\nbegin data;\n')
-            oh.write('\tdimensions ntax=%s nchar=%s;\n' % (len(self), max_seq_len))
+            oh.write('\tdimensions ntax=%s nchar=%s;\n' % (seq_num, seq_len))
             oh.write('\tformat datatype='+datatype+' interleave=yes gap=-;\n')
             oh.write('\tmatrix\n')
-            for i in range(int(math.ceil(float(max_seq_len) / line_len))):
-                for j in range(len(self)):
+            for i, n in enumerate(range(0, seq_len, line_len)):
+                for j in range(seq_num):
                     oh.write(tags[j]+' '*(13-len(tags[j]))+' '.join(seqs[j][i*block_num:(i+1)*block_num])+'\n')
                 oh.write('\n')
             oh.write('\t;\nend;\n')
@@ -300,13 +298,10 @@ class Seq(list):
         elif outfmt == 'msf':
             seqs = []
             tags = []
-            max_seq_len = 0
+            seq_len = len(self[0].seq)
             seq_offset = max_tag_len + 3
             for o in self:
                 tags.append(o.tag[:max_tag_len])
-                curr_seq_len = len(o.seq)
-                if curr_seq_len > max_seq_len:
-                    max_seq_len = curr_seq_len
                 count = 0
                 seq = []
                 while 1:
@@ -317,20 +312,20 @@ class Seq(list):
                     seq.append(frag.replace('-', '.'))
                 seqs.append(seq)
             block_num = int(line_len/block_len)
-            datatype=self.type()
+            datatype=self.seq_type()
             if datatype == 'Protein':
                 datatype = 'P'
             else:
                 datatype = 'N'
 
             oh.write('PileUp\n\n')
-            oh.write(' MSF: %s TYPE: %s Check: 0 ..\n\n' % (max_seq_len, datatype))
+            oh.write(' MSF: %s TYPE: %s Check: 0 ..\n\n' % (seq_len, datatype))
             for j in range(len(self)):
                 oh.write(
                     ' Name: %s oo Len: %s  Check: 0 Weight: 10.00 ..\n' % (tags[j], len(seqs[j]))
                 )
             oh.write('\n//\n\n')
-            for i in range(int(math.ceil(float(max_seq_len) / line_len))):
+            for i, n in enumerate(range(0, seq_len, line_len)):
                 for j in range(len(self)):
                     oh.write(tags[j]+' '*(seq_offset-len(tags[j]))+' '.join(seqs[j][i*block_num:(i+1)*block_num])+'\n')
                 oh.write('\n\n')
