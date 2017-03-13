@@ -1,22 +1,28 @@
-## SEQLIM
+## seqlim
 Concatenate and Convert Multiple Sequence Alignments
 
 # Description
-SEQLIM is a python script for manipulating biological sequences. It concatenates multiple sequence alignments (MSAs) horizontally or vertically, and converts MSAs into various formats (fasta, phylip, nexus, msf, tsv, and csv). The horizontal concatenation of MSAs is often used for multi-loci/multi-gene phylogenetic analysis and phylogenomics.
+`seqlim` is a python script for manipulating biological sequences. It concatenates multiple sequence alignments (MSAs) horizontally or vertically, and converts MSAs into various formats (fasta, phylip, nexus, msf, tsv, and csv). The horizontal concatenation of MSAs is often used for multi-loci/multi-gene phylogenetic analysis and phylogenomics.
  
 # Installation
 
 * Install Python 2.7 or higher, Python installers are available at https://www.python.org/.
-* Clone or download this repo, make `seqlim.py` executable, add its path to your `PATH`, and test it.
+* Clone or download this repo and install this package using setup.py.
 ```
-$ seqlim.py -h
+$ python setup.py install
+
+* Confirm the installation of an executable.
 ```
-* Or go to a directory with seqlim.py, and use with `python` command.
-```
-$ python seqlim.py -h
+$ seqlim -h
 ```
 
-# Examples
+* Confirm the installation of `seqlim` library.
+```
+$ python
+>>> from seqlim import Seq
+```
+
+# Executable examples
 
 * Suppose two sequence files in FASTA format in `./test/fasta`.
  
@@ -40,7 +46,7 @@ $ python seqlim.py -h
 * Concatenate these files horizontally.
 
 ```
-$ seqlim.py cath ./test/fasta
+$ seqlim cath ./test/fasta
 >Escheri1
 CCUGGCGGCCGUAGCGCGGUGGUCCCACCUGACCCCAUGCCGAACUCAGAAGUGAAACUA
 GCGCCGAUGGUAGUGUGGGGUCUCCCCAUGCGAGAGUAGGGAACU--GCCAGGC
@@ -52,7 +58,7 @@ GCGCCGAUUGUAGUGAAGGGUUUCCCUUUGUGAGAGUAGG--ACGUCGCCACGC
 * Concatenate the files vertically.
 
 ```
-$ seqlim.py catv ./test/fasta
+$ seqlim catv ./test/fasta
 >Escheri1
 CCUGGCGGCCGUAGCGCGGUGGUCCCACCUGACCCCAUGCCGAACUCAGAAGUGAAAC
 >Enteroc1
@@ -66,7 +72,7 @@ UAGCGCCGAUUGUAGUGAAGGGUUUCCCUUUGUGAGAGUAGG--ACGUCGCCACGC
 * Set alternative input sequence format after `-infmt`. SEQLIM accepts `phylip`, `phy`, or `ph` for PHYLIP format; `nexus`, `nex`, or `nxs` for NEXUS format.
 
 ```
-$ seqlim.py -infmt phylip cath ./test/phylip
+$ seqlim -infmt phylip cath ./test/phylip
 >Escheri1
 CCUGGCGGCCGUAGCGCGGUGGUCCCACCUGACCCCAUGCCGAACUCAGAAGUGAAAC
 >Enteroc1
@@ -79,7 +85,7 @@ UAGCGCCGAUUGUAGUGAAGGGUUUCCCUUUGUGAGAGUAGG--ACGUCGCCACGC
  
 * Set output format after `-outfmt`.
 ``` 
-$ seqlim.py -outfmt phylip cath ./test/fasta
+$ seqlim -outfmt phylip cath ./test/fasta
  2 114
 Escheri1     CCUGGCGGCC GUAGCGCGGU GGUCCCACCU GACCCCAUGC CGAACUCAGA AGUGAAACUA
 Enteroc1     UGUGGUGGCG AUAGCGAGAA GGAUACACCU GUUCCCAUGC CGAACACAGA AGUUAAGCUA
@@ -90,7 +96,7 @@ Enteroc1     UGUGGUGGCG AUAGCGAGAA GGAUACACCU GUUCCCAUGC CGAACACAGA AGUUAAGCUA
  
 * The line and block lengths of sequences can be adjusted using `-line\_length` and `-block\_length`, respectively.
 ```
-$ python seqlim.py -outfmt phylip -line_length 50 -block_length 5 cath ./test/fasta
+$ python seqlim -outfmt phylip -line_length 50 -block_length 5 cath ./test/fasta
  2 114
 Escheri1     CCUGG CGGCC GUAGC GCGGU GGUCC CACCU GACCC CAUGC CGAAC UCAGA
 Enteroc1     UGUGG UGGCG AUAGC GAGAA GGAUA CACCU GUUCC CAUGC CGAAC ACAGA
@@ -104,16 +110,16 @@ Enteroc1     UGUGG UGGCG AUAGC GAGAA GGAUA CACCU GUUCC CAUGC CGAAC ACAGA
 
 * Save an output.
 ``` 
-$ seqlim.py -o ./test/temp/concatenated.fasta cath ./test/fasta
+$ seqlim -o ./test/temp/concatenated.fasta cath ./test/fasta
 ```
  
 * Just format conversion.
 ```
-$ seqlim.py -outfmt phylip -o ./test/temp/converted.phylip cnvt ./test/fasta/locus1.fasta
+$ seqlim -outfmt phylip -o ./test/temp/converted.phylip cnvt ./test/fasta/locus1.fasta
 ``` 
  
 * Convert all sequence files in `./test/fasta` to another format (phylip) and save them in `./test/phylip`.
 ```
-$ seqlim.py -o ./test/phylip -outfmt phylip cnvt ./test/fasta
+$ seqlim -o ./test/phylip -outfmt phylip cnvt ./test/fasta
 ``` 
  
