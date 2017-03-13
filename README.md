@@ -8,8 +8,10 @@ Concatenate and Convert Multiple Sequence Alignments
 
 * Install Python 2.7 or higher, Python installers are available at https://www.python.org/.
 * Clone or download this repo and install this package using setup.py.
+
 ```
 $ python setup.py install
+```
 
 * Confirm the installation of an executable.
 ```
@@ -17,16 +19,18 @@ $ seqlim -h
 ```
 
 * Confirm the installation of `seqlim` library.
+
 ```
 $ python
 >>> from seqlim import Seq
 ```
 
+
 # Executable examples
 
 * Suppose two sequence files in FASTA format in `./test/fasta`.
  
- 
+ ```
 `Locus1.fasta`
 
     >Escheri1
@@ -41,7 +45,7 @@ $ python
     UAGCGCCGAUGGUAGUGUGGGGUCUCCCCAUGCGAGAGUAGGGAACU--GCCAGGC
     >Enteroc2
     UAGCGCCGAUUGUAGUGAAGGGUUUCCCUUUGUGAGAGUAGG--ACGUCGCCACGC
- 
+ ```
 
 * Concatenate these files horizontally.
 
