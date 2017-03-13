@@ -1,41 +1,9 @@
 #!/usr/bin/env python
 
 import sys
-import os
-import errno
 from collections import defaultdict, OrderedDict, Counter
 
-
-class Path:
-    @staticmethod
-    def mkdir_p(path):
-        if path:
-            try:
-                os.makedirs(path)
-            except OSError as exc:
-                if exc.errno == errno.EEXIST and os.path.isdir(path):
-                    pass
-                else:
-                    raise
-
-    @staticmethod
-    def listfiles_r(inpath, exts=[], depth_count=1):
-        for filename in os.listdir(inpath):
-            filepath = os.path.join(inpath, filename)
-            if os.path.isdir(filepath):
-                for f in Path.listfiles_r(
-                    filepath, exts=exts, depth_count=depth_count+1
-                ):
-                    yield f
-            elif os.path.isfile(filepath):
-                if exts and not os.path.splitext(filepath)[1] in exts:
-                    continue
-                subpath = filename
-                stem = os.path.split(filepath)[0]
-                for c in range(depth_count-1):
-                    stem, base = os.path.split(stem)
-                    subpath = os.path.join(base, subpath)
-                yield filepath, subpath
+__version__ = "0.2.0"
 
 
 class _Seq:
@@ -121,28 +89,19 @@ class Seq(list):
         for tag in tags:
             self.add(tag, tag2seq[tag])
 
-    def make(self, string, infmt='fasta'):
-        infmt = infmt.lower()
-        if infmt in ('fasta', 'fas', 'mfa', 'fna', 'fsa', 'fa'):
-            self.parse_fasta(string)
-        elif infmt == 'msf':
-            self.parse_msf(string)
-        elif infmt == 'phylip':
-            self.parse_phylip(string)
- 
-    def _yield(self, ITER, infmt='fasta'):
-        if infmt.lower() in ('fasta', 'fas', 'mfa', 'fna', 'fsa', ' fa'):
-            tag, seq = '', ''
-            for l in ITER:
-                l = l.strip()
-                if l and l[0] == '>':
-                    if seq:
-                        yield _Seq(tag.rstrip(), seq.strip().replace(' ', ''))
-                        seq = ''
-                    tag = l[1:]
-                else:
-                    seq += l
-            yield _Seq(tag.rstrip(), seq.strip().replace(' ', ''))
+
+    def iterparse_fasta(self, ITER):
+        tag, seq = '', ''
+        for l in ITER:
+            l = l.strip()
+            if l and l[0] == '>':
+                if seq:
+                    yield _Seq(tag.rstrip(), seq.strip().replace(' ', ''))
+                    seq = ''
+                tag = l[1:]
+            else:
+                seq += l
+        yield _Seq(tag.rstrip(), seq.strip().replace(' ', ''))
 
     def add(self, tag, seq):
         self.append(_Seq(tag, seq))
@@ -354,7 +313,13 @@ class Seq(list):
     @classmethod
     def parse_string(cls, string, infmt='fasta'):
         o = cls()
-        o.make(string, infmt=infmt)
+        infmt = infmt.lower()
+        if infmt in ('fasta', 'fas', 'mfa', 'fna', 'fsa', 'fa'):
+            o.parse_fasta(string)
+        elif infmt == 'msf':
+            o.parse_msf(string)
+        elif infmt == 'phylip':
+            o.parse_phylip(string)
         return o
 
     @classmethod
@@ -362,130 +327,31 @@ class Seq(list):
         return cls.parse_string(fh.read(), infmt=infmt)
 
     @classmethod
-    def iterparse(cls, fh, infmt='fasta'):
+    def iterparse(cls, fh):
         o = cls()
-        return o._yield(fh, infmt=infmt)
-
-    @classmethod
-    def cath_files(cls, files):
-        obs = []
-        seq_len = None
-        for p in files:
-            s = Seq.parse(open(p))
-            current_seq_len = len(s)
-            if seq_len is not None and current_seq_len != seq_len:
-                sys.stderr.write('Mismatch in sequence # among files.\n')
-                sys.exit(0)
-            else:
-                seq_len = current_seq_len
-            obs.append(s)
-        newseq = Seq()
-        for i in range(seq_len):
-            seq = ''
-            for ob in obs:
-                seq += ob[i].seq
-            newseq.add(obs[0][i].tag, seq)
-        return newseq
+        return o.iterparse_fasta(fh)
 
     @staticmethod
     def chunks(S, n):
         return [S[c:c+n] for c in range(0, len(S), n)]
 
+    def write_seq(self, outfile, outfmt, block_len, line_len, rm=None):
+        if rm:
+            self.rm(rm) # remove residues
 
-
-if __name__ == '__main__':
-    import argparse
-    par = argparse.ArgumentParser()
-    par.add_argument(
-        'a', metavar='cnvt|catv|cath', 
-        choices=['cnvt', 'catv', 'cath'],
-        help="choose among 'cnvt' (convert), 'catv' (concatenate vertically), 'cath' (concatenate horizontally))"
-    )
-    par.add_argument(
-        'i', metavar='PATH',
-        help='MSA file or dir containing MSA files.'
-    )
-    par.add_argument(
-        '-o', metavar='PATH',
-        help='file or dir for saving MSA(s).'
-    )
-    par.add_argument(
-        '-infmt', metavar='fasta|phylip|msf', default='fasta',
-        help="input format. default=fasta"
-    )
-    par.add_argument(
-        '-outfmt', metavar='fasta|phylip|nex|msf|tsv|csv', default='fasta',
-        help="output format. default=fasta"
-    )
-    par.add_argument(
-        '-line_length', metavar='INTEGER', type=int, default=60,
-        help="sequence length of each line. default=60"
-    )
-    par.add_argument(
-        '-block_length', metavar='INTEGER', type=int, default=10,
-        help="the length of each block in lines. default=10"
-    )
-    par.add_argument(
-        '-remove', metavar="S1",
-        help="the specified residue will be removed."
-    )
-    par.add_argument('-inexts', metavar='inexts', nargs='+')
-    args = par.parse_args()
-
-    class Seq(Seq):
-        def write_seq(self, outfile, outfmt, block_len, line_len, rm=None):
-            if rm:
-                self.rm(rm) # remove residues
-
-            # style seq output 
-            if outfile:
-                if not outfmt:
-                    outfmt = args.o.name.split('.')[-1]
-                with open(outfile, 'w') as ofh:
-                    self.write(
-                        ofh, outfmt=outfmt,
-                        block_len=block_len, line_len=line_len,
-                        quiet=False
-                    )   
-            else:
+        # style seq output 
+        if outfile:
+            if not outfmt:
+                outfmt = args.o.name.split('.')[-1]
+            with open(outfile, 'w') as ofh:
                 self.write(
-                    sys.stdout, outfmt=outfmt,
-                    block_len=block_len, line_len=line_len
-                )
-
-
-
-    if args.a == 'cnvt': # convert
-        if os.path.isdir(args.i):
-            if not args.o:
-                sys.stderr.write("a dir path for output files is needed.\n")
-                exit()
-            Path.mkdir_p(args.o)
-            for f, subf in Path.listfiles_r(args.i, exts=args.inexts):
-                stem, filename = os.path.split(subf)
-                basename, ext = os.path.splitext(filename)
-                ofh_dir = os.path.join(args.o, stem)
-                Path.mkdir_p(ofh_dir)
-                ofh_name = os.path.join(ofh_dir, basename+'.'+args.outfmt)
-                
-                with open(f) as ifh:
-                    seq = Seq.parse(ifh, infmt=args.infmt)
-                    seq.write_seq(
-                        ofh_name, args.outfmt, args.block_length, args.line_length, rm=args.remove
-                    )
+                    ofh, outfmt=outfmt,
+                    block_len=block_len, line_len=line_len,
+                    quiet=False
+                )   
         else:
-            with open(args.i) as ifh:
-                seq = Seq.parse(ifh, infmt=args.infmt)
-                seq.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
-
-    elif args.a == 'catv' and os.path.isdir(args.i):
-        s = Seq()
-        for path, subpath in Path.listfiles_r(args.i, exts=args.inexts):
-            with open(path) as f:
-                s.extend(Seq.parse(f))
-        s.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
-        
-    elif args.a == 'cath' and os.path.isdir(args.i):
-        seq = Seq.cath_files([e[0] for e in Path.listfiles_r(args.i, exts=args.inexts)])
-        seq.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
+            self.write(
+                sys.stdout, outfmt=outfmt,
+                block_len=block_len, line_len=line_len
+            )
 

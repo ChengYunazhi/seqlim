@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+
+from seqlim import Seq
+import os
+import sys
+import errno
+
+
+class Path:
+    @staticmethod
+    def mkdir_p(path):
+        if path:
+            try:
+                os.makedirs(path)
+            except OSError as exc:
+                if exc.errno == errno.EEXIST and os.path.isdir(path):
+                    pass
+                else:
+                    raise
+
+    @staticmethod
+    def listfiles_r(inpath, exts=[], depth_count=1):
+        for filename in os.listdir(inpath):
+            filepath = os.path.join(inpath, filename)
+            if os.path.isdir(filepath):
+                for f in Path.listfiles_r(
+                    filepath, exts=exts, depth_count=depth_count+1
+                ):
+                    yield f
+            elif os.path.isfile(filepath):
+                if exts and not os.path.splitext(filepath)[1] in exts:
+                    continue
+                subpath = filename
+                stem = os.path.split(filepath)[0]
+                for c in range(depth_count-1):
+                    stem, base = os.path.split(stem)
+                    subpath = os.path.join(base, subpath)
+                yield filepath, subpath
+
+
+if __name__ == '__main__':
+    import argparse
+    par = argparse.ArgumentParser()
+    par.add_argument(
+        'a', metavar='cnvt|catv|cath', 
+        choices=['cnvt', 'catv', 'cath'],
+        help="choose among 'cnvt' (convert), 'catv' (concatenate vertically), 'cath' (concatenate horizontally))"
+    )
+    par.add_argument(
+        'i', metavar='PATH',
+        help='MSA file or dir containing MSA files.'
+    )
+    par.add_argument(
+        '-o', metavar='PATH',
+        help='file or dir for saving MSA(s).'
+    )
+    par.add_argument(
+        '-infmt', metavar='fasta|phylip|msf', default='fasta',
+        help="input format. default=fasta"
+    )
+    par.add_argument(
+        '-outfmt', metavar='fasta|phylip|nex|msf|tsv|csv', default='fasta',
+        help="output format. default=fasta"
+    )
+    par.add_argument(
+        '-line_length', metavar='INTEGER', type=int, default=60,
+        help="sequence length of each line. default=60"
+    )
+    par.add_argument(
+        '-block_length', metavar='INTEGER', type=int, default=10,
+        help="the length of each block in lines. default=10"
+    )
+    par.add_argument(
+        '-remove', metavar="S1",
+        help="the specified residue will be removed."
+    )
+    par.add_argument(
+        '--read_gzipped', action="store_true",
+        help="read gzipped file(s)."
+    )
+    par.add_argument('-inexts', metavar='inexts', nargs='+')
+    args = par.parse_args()
+
+    if args.read_gzipped:
+        import gzip
+        open_func = gzip.open
+    else:
+        open_func = open
+
+    if args.a == 'cnvt': # convert
+        if os.path.isdir(args.i):
+            if not args.o:
+                sys.stderr.write("a dir path for output files is needed.\n")
+                exit()
+            Path.mkdir_p(args.o)
+            for f, subf in Path.listfiles_r(args.i, exts=args.inexts):
+                stem, filename = os.path.split(subf)
+                basename, ext = os.path.splitext(filename)
+                ofh_dir = os.path.join(args.o, stem)
+                Path.mkdir_p(ofh_dir)
+                ofh_name = os.path.join(ofh_dir, basename+'.'+args.outfmt)
+                
+                with open_func(f, 'rt') as ifh:
+                    seq = Seq.parse(ifh, infmt=args.infmt)
+                    seq.write_seq(
+                        ofh_name, args.outfmt, args.block_length, args.line_length, rm=args.remove
+                    )
+        else:
+            with open_func(args.i, 'rt') as ifh:
+                seq = Seq.parse(ifh, infmt=args.infmt)
+                seq.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
+
+    elif args.a == 'catv' and os.path.isdir(args.i):
+        s = Seq()
+        for path, subpath in Path.listfiles_r(args.i, exts=args.inexts):
+            with open_func(path, 'rt') as f:
+                s.extend(Seq.parse(f))
+        s.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
+        
+    elif args.a == 'cath' and os.path.isdir(args.i):
+        obs = []
+        seq_len = None
+        for p in [e[0] for e in Path.listfiles_r(args.i, exts=args.inexts)]:
+            s = Seq.parse(open_func(p, 'rt'))
+            current_seq_len = len(s)
+            if seq_len is not None and current_seq_len != seq_len:
+                sys.stderr.write('Mismatch in sequence # among files.\n')
+                sys.exit(0)
+            else:
+                seq_len = current_seq_len
+            obs.append(s)
+        newseq = Seq()
+        for i in range(seq_len):
+            seq = ''
+            for ob in obs:
+                seq += ob[i].seq
+            newseq.add(obs[0][i].tag, seq)
+        newseq.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
+
