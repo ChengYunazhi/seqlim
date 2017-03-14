@@ -114,14 +114,14 @@ if __name__ == '__main__':
         s = Seq()
         for path, subpath in Path.listfiles_r(args.i, exts=args.inexts):
             with open_func(path, 'rt') as f:
-                s.extend(Seq.parse(f))
+                s.extend(Seq.parse(f, infmt=args.infmt))
         s.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
         
     elif args.a == 'cath' and os.path.isdir(args.i):
         obs = []
         seq_len = None
         for p in [e[0] for e in Path.listfiles_r(args.i, exts=args.inexts)]:
-            s = Seq.parse(open_func(p, 'rt'))
+            s = Seq.parse(open_func(p, 'rt'), infmt=args.infmt)
             current_seq_len = len(s)
             if seq_len is not None and current_seq_len != seq_len:
                 sys.stderr.write('Mismatch in sequence # among files.\n')
@@ -136,4 +136,3 @@ if __name__ == '__main__':
                 seq += ob[i].seq
             newseq.add(obs[0][i].tag, seq)
         newseq.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
-
