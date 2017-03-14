@@ -3,7 +3,7 @@
 import sys
 from collections import defaultdict, OrderedDict, Counter
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 
 class _Seq:
