@@ -1,19 +1,19 @@
-## seqlim
+# seqlim
 Concatenate and Convert Multiple Sequence Alignments
 
 # Description
-`seqlim` is a python script for manipulating biological sequences. It concatenates multiple sequence alignments (MSAs) horizontally or vertically, and converts MSAs into various formats (fasta, phylip, nexus, msf, tsv, and csv). The horizontal concatenation of MSAs is often used for multi-loci/multi-gene phylogenetic analysis and phylogenomics.
+`seqlim` includes a python library and an executable for manipulating biological sequences. It concatenates multiple sequence alignments (MSAs) horizontally or vertically, and converts MSAs into various formats (fasta, phylip, nexus, msf, tsv, and csv). The horizontal concatenation of MSAs is often used for multi-loci/multi-gene phylogenetic analysis and phylogenomics.
  
 # Installation
 
 * Install Python 2.7 or higher, Python installers are available at https://www.python.org/.
-* Clone or download this repo and install this package using setup.py.
+* Clone or download this repo and install using setup.py.
 
 ```
 $ python setup.py install
 ```
 
-* Confirm the installation of an executable.
+* Confirm the installation of `seqlim` executable.
 ```
 $ seqlim -h
 ```
