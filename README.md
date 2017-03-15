@@ -73,7 +73,7 @@ UAGCGCCGAUGGUAGUGUGGGGUCUCCCCAUGCGAGAGUAGGGAACU--GCCAGGC
 UAGCGCCGAUUGUAGUGAAGGGUUUCCCUUUGUGAGAGUAGG--ACGUCGCCACGC
 ``` 
 
-* Set alternative input sequence format after `-infmt`. SEQLIM accepts `phylip`, `phy`, or `ph` for PHYLIP format; `nexus`, `nex`, or `nxs` for NEXUS format.
+* Set an input sequence format after `-infmt`. `seqlim` accepts 'fasta', 'fas', 'mfa', 'fna', 'fsa' or 'fa' for FASTA format, 'phylip' or 'phy' for PHYLIP format and 'msf' for MSF format.
 
 ```
 $ seqlim -infmt phylip cath ./test/phylip
@@ -87,7 +87,7 @@ UAGCGCCGAUGGUAGUGUGGGGUCUCCCCAUGCGAGAGUAGGGAACU--GCCAGGC
 UAGCGCCGAUUGUAGUGAAGGGUUUCCCUUUGUGAGAGUAGG--ACGUCGCCACGC
 ``` 
  
-* Set output format after `-outfmt`.
+* Set an output sequence format after `-outfmt`. `seqlim` accepts 'fasta', 'fas', 'mfa', 'fna', 'fsa' or 'fa' for FASTA format, 'phylip' or 'phy' for PHYLIP format, 'nexus', 'nex' or 'nxs' for NEXUS format, 'msf' for MSF format, 'csv' for CSV format and 'tsv' for TSV format.
 ``` 
 $ seqlim -outfmt phylip cath ./test/fasta
  2 114
@@ -98,9 +98,9 @@ Enteroc1     UGUGGUGGCG AUAGCGAGAA GGAUACACCU GUUCCCAUGC CGAACACAGA AGUUAAGCUA
              GCGCCGAUUG UAGUGAAGGG UUUCCCUUUG UGAGAGUAGG --ACGUCGCC ACGC
 ```
  
-* The line and block lengths of sequences can be adjusted using `-line\_length` and `-block\_length`, respectively.
+* The line and block lengths of sequences can be adjusted using `-line_length` and `-block_length`, respectively.
 ```
-$ python seqlim -outfmt phylip -line_length 50 -block_length 5 cath ./test/fasta
+$ seqlim -outfmt phylip -line_length 50 -block_length 5 cath ./test/fasta
  2 114
 Escheri1     CCUGG CGGCC GUAGC GCGGU GGUCC CACCU GACCC CAUGC CGAAC UCAGA
 Enteroc1     UGUGG UGGCG AUAGC GAGAA GGAUA CACCU GUUCC CAUGC CGAAC ACAGA
