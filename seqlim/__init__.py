@@ -3,7 +3,7 @@
 import sys
 from collections import defaultdict, OrderedDict, Counter
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 
 class _Seq:
@@ -216,7 +216,7 @@ class Seq(list):
             for ob in self:
                 oh.write(ob.tag+','+ob.seq+'\n')
 
-        elif outfmt in ('fasta', 'fas', 'mfa', 'fna'):
+        elif outfmt in ('fasta', 'fas', 'mfa', 'fna', 'fsa', 'fa'):
             self.write_fasta(
                 oh,
                 line_len=line_len,
@@ -318,7 +318,7 @@ class Seq(list):
             o.parse_fasta(string)
         elif infmt == 'msf':
             o.parse_msf(string)
-        elif infmt == 'phylip':
+        elif infmt in ('phylip', 'phy'):
             o.parse_phylip(string)
         return o
 
