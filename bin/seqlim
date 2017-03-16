@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from seqlim import Seq
+from seqlim import MSeq
 import os
 import sys
 import errno
@@ -89,6 +89,7 @@ if __name__ == '__main__':
 
     if args.a == 'cnvt': # convert
         if os.path.isdir(args.i):
+            # if args.i is a dir, converts files in args.i iteratively.
             if not args.o:
                 sys.stderr.write("a dir path for output files is needed.\n")
                 exit()
@@ -96,43 +97,99 @@ if __name__ == '__main__':
             for f, subf in Path.listfiles_r(args.i, exts=args.inexts):
                 stem, filename = os.path.split(subf)
                 basename, ext = os.path.splitext(filename)
-                ofh_dir = os.path.join(args.o, stem)
-                Path.mkdir_p(ofh_dir)
-                ofh_name = os.path.join(ofh_dir, basename+'.'+args.outfmt)
+                outdir = os.path.join(args.o, stem)
+                outfilename = os.path.join(outdir, basename+'.'+args.outfmt)
+                Path.mkdir_p(outdir)
                 
                 with open_func(f, 'rt') as ifh:
-                    seq = Seq.parse(ifh, infmt=args.infmt)
-                    seq.write_seq(
-                        ofh_name, args.outfmt, args.block_length, args.line_length, rm=args.remove
-                    )
+                    with open(outfilename, "w") as ofh:
+                        mseq = MSeq.parse(ifh, infmt=args.infmt)
+                        if args.remove:
+                            mseq.rm(args.remove)
+                        mseq.write(
+                            ofh, args.outfmt, args.block_length, args.line_length,
+                            quiet=False
+                        )
+
         else:
+            # if args.i is a file, converts the file.
             with open_func(args.i, 'rt') as ifh:
-                seq = Seq.parse(ifh, infmt=args.infmt)
-                seq.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
+                mseq = MSeq.parse(ifh, infmt=args.infmt)
+                if args.remove:
+                    mseq.rm(args.remove)
+                if args.o:
+                    with open(args.o, "w") as ofh:
+                        mseq.write(
+                            ofh, args.outfmt, args.block_length, args.line_length,
+                            quiet=False
+                        )
+                else:
+                    mseq.write(
+                        sys.stdout, args.outfmt, args.block_length, args.line_length,
+                        quiet=True
+                    )
 
     elif args.a == 'catv' and os.path.isdir(args.i):
-        s = Seq()
-        for path, subpath in Path.listfiles_r(args.i, exts=args.inexts):
-            with open_func(path, 'rt') as f:
-                s.extend(Seq.parse(f, infmt=args.infmt))
-        s.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
+        # make a blank MSeq object.
+        mseq = MSeq()
+        
+        # make MSeq objects for files, and extend their Seq objects to the new MSeq object.
+        for filename, _ in Path.listfiles_r(args.i, exts=args.inexts):
+            with open_func(filename, 'rt') as f:
+                mseq.extend(MSeq.parse(f, infmt=args.infmt))
+        
+        if args.remove:
+            mseq.rm(args.remove)
+
+        if args.o:
+            with open(args.o, "w") as ofh:
+                mseq.write(
+                    ofh, args.outfmt, args.block_length, args.line_length,
+                    quiet=False
+                )
+        else:
+            mseq.write(
+                sys.stdout, args.outfmt, args.block_length, args.line_length,
+                quiet=True
+            )
         
     elif args.a == 'cath' and os.path.isdir(args.i):
-        obs = []
-        seq_len = None
-        for p in [e[0] for e in Path.listfiles_r(args.i, exts=args.inexts)]:
-            s = Seq.parse(open_func(p, 'rt'), infmt=args.infmt)
-            current_seq_len = len(s)
-            if seq_len is not None and current_seq_len != seq_len:
-                sys.stderr.write('Mismatch in sequence # among files.\n')
-                sys.exit(0)
-            else:
-                seq_len = current_seq_len
-            obs.append(s)
-        newseq = Seq()
-        for i in range(seq_len):
+        # make MSeq objects for individual files.
+        mseqobs = []
+        seq_num = None
+        for filename, _ in Path.listfiles_r(args.i, exts=args.inexts):
+            with open_func(filename, 'rt') as f:
+                _mseqob = MSeq.parse(f, infmt=args.infmt)
+                current_seq_num = len(_mseqob)
+                if seq_num is not None and current_seq_num != seq_num:
+                    sys.stderr.write('Mismatch in sequence # among files.\n')
+                    sys.exit(0)
+                else:
+                    seq_num = current_seq_num
+                mseqobs.append(_mseqob)
+
+        # make a blank MSeq object.
+        mseq = MSeq()
+
+        # iterate over Seq objects in each MSeq object to concatenate seqs.
+        for i in range(seq_num):
             seq = ''
-            for ob in obs:
+            for ob in mseqobs:
                 seq += ob[i].seq
-            newseq.add(obs[0][i].tag, seq)
-        newseq.write_seq(args.o, args.outfmt, args.block_length, args.line_length, rm=args.remove)
+            mseq.add(mseqobs[0][i].tag, seq)
+
+        if args.remove:
+            mseq.rm(args.remove)
+
+        if args.o:
+            with open(args.o, "w") as ofh:
+                mseq.write(
+                    ofh, args.outfmt, args.block_length, args.line_length,
+                    quiet=False
+                )
+        else:
+            mseq.write(
+                sys.stdout, args.outfmt, args.block_length, args.line_length,
+                quiet=True
+            )
+        

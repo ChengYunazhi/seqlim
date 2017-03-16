@@ -22,7 +22,7 @@ $ seqlim -h
 
 ```
 $ python
->>> from seqlim import Seq
+>>> from seqlim import MSeq
 ```
 
 

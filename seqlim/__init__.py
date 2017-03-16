@@ -1,12 +1,10 @@
-#!/usr/bin/env python
-
 import sys
 from collections import defaultdict, OrderedDict, Counter
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 
-class _Seq:
+class Seq:
     def __init__(self, tag, seq):
         self.tag = tag
         self.seq = seq
@@ -37,7 +35,7 @@ class Tag(OrderedDict):
         return ob
 
 
-class Seq(list):
+class MSeq(list):
     def parse_fasta(self, string):
         tag, seq = '', ''
         for l in string.splitlines():
@@ -96,25 +94,25 @@ class Seq(list):
             l = l.strip()
             if l and l[0] == '>':
                 if seq:
-                    yield _Seq(tag.rstrip(), seq.strip().replace(' ', ''))
+                    yield Seq(tag.rstrip(), seq.strip().replace(' ', ''))
                     seq = ''
                 tag = l[1:]
             else:
                 seq += l
-        yield _Seq(tag.rstrip(), seq.strip().replace(' ', ''))
+        yield Seq(tag.rstrip(), seq.strip().replace(' ', ''))
 
     def add(self, tag, seq):
-        self.append(_Seq(tag, seq))
+        self.append(Seq(tag, seq))
     
     def erase_common_gaps(self):
         pos2num  = defaultdict(int)
         for o in self:
             for idx in [i for i, x in enumerate(o.seq) if x == '-']:
                 pos2num[idx] += 1
-        ob_len = len(self)
+        seqnum = len(self)
         pos_to_erase = []
         for k, v in pos2num.items():
-            if v == ob_len:
+            if v == seqnum:
                 pos_to_erase.append(k)
         pos_to_erase.sort(reverse=True)
         for o in self:
@@ -334,24 +332,3 @@ class Seq(list):
     @staticmethod
     def chunks(S, n):
         return [S[c:c+n] for c in range(0, len(S), n)]
-
-    def write_seq(self, outfile, outfmt, block_len, line_len, rm=None):
-        if rm:
-            self.rm(rm) # remove residues
-
-        # style seq output 
-        if outfile:
-            if not outfmt:
-                outfmt = args.o.name.split('.')[-1]
-            with open(outfile, 'w') as ofh:
-                self.write(
-                    ofh, outfmt=outfmt,
-                    block_len=block_len, line_len=line_len,
-                    quiet=False
-                )   
-        else:
-            self.write(
-                sys.stdout, outfmt=outfmt,
-                block_len=block_len, line_len=line_len
-            )
-
