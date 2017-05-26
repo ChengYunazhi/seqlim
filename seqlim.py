@@ -1,7 +1,7 @@
 import sys
 from collections import defaultdict, OrderedDict, Counter
 
-__version__ = "0.2.3"
+__version__ = "0.2.5"
 
 
 class Seq:
@@ -176,12 +176,38 @@ class MSeq(list):
                     header = ' '*seq_offset
                 else:
                     tag = self[j].tag[:max_tag_len]
-                    header = tag + ' '*(seq_offset-len(tag))
+                    header = tag+ ' '*(seq_offset-len(tag))
                 seq = ' '.join(
                     self.chunks(self[j].seq[s:s+line_len], block_len)
                 )
                 oh.write(header+seq+'\n')
             oh.write('\n')
+
+    def write_nexus(
+        self, oh,
+        max_tag_len=10, line_len=60
+    ):
+
+        seq_len = len(self[0].seq)
+        seq_num = len(self)
+        seq_offset = max_tag_len+3
+
+        datatype=self.seq_type().lower()
+        if not datatype:
+            sys.stderr.write('unknown datatype\n')
+            sys.exit(0)
+        oh.write('#NEXUS\n\nBegin data;\n')
+        oh.write('Dimensions ntax=%s nchar=%s;\n' % (seq_num, seq_len))
+        oh.write('Format datatype='+datatype+' interleave=yes gap=-;\n')
+        oh.write('Matrix\n')
+
+        for i, s in enumerate(range(0, seq_len, line_len)):
+            for j in range(seq_num):
+                tag = self[j].tag[:max_tag_len]
+                header = tag+' '*(seq_offset-len(tag))
+                oh.write(header+self[j].seq[s:s+line_len]+"\n")
+            oh.write('\n')
+        oh.write('\t;\nend;\n')
 
     def write_fasta(self, oh, line_len=60):
         for ob in self:
@@ -221,36 +247,10 @@ class MSeq(list):
             )
 
         elif outfmt in ('nex', 'nxs', 'nexus'):
-            seqs = []
-            tags = []
-            seq_len = len(self[0].seq)
-            seq_num = len(self)
-            seq_offset = max_tag_len + 3
-            for o in self:
-                tags.append(o.tag[:max_tag_len])
-                count = 0
-                seq = []
-                while 1:
-                    frag = o.seq[count:count+block_len]
-                    if not frag:
-                        break
-                    seq.append(frag)
-                    count += block_len
-                seqs.append(seq)
-            block_num = int(line_len/block_len)
-            datatype=self.seq_type().lower()
-            if not datatype:
-                sys.stderr.write('unknown datatype\n')
-                sys.exit(0)
-            oh.write('#NEXUS\n\nbegin data;\n')
-            oh.write('\tdimensions ntax=%s nchar=%s;\n' % (seq_num, seq_len))
-            oh.write('\tformat datatype='+datatype+' interleave=yes gap=-;\n')
-            oh.write('\tmatrix\n')
-            for i, n in enumerate(range(0, seq_len, line_len)):
-                for j in range(seq_num):
-                    oh.write(tags[j]+' '*(13-len(tags[j]))+' '.join(seqs[j][i*block_num:(i+1)*block_num])+'\n')
-                oh.write('\n')
-            oh.write('\t;\nend;\n')
+            self.write_nexus(
+                oh,
+                line_len=line_len,
+            )
 
         elif outfmt == 'msf':
             seqs = []
@@ -289,24 +289,6 @@ class MSeq(list):
         
         if not quiet:
             sys.stdout.write('saved at {}\n'.format(oh.name))
-
-    def format_seqs(self, max_tag_len, line_len, block_len):
-        tags, seqs = [], []
-        for o in self:
-            curr_seq_len = len(o.seq)
-            if curr_seq_len > line_len:
-                row_len = curr_seq_len
-            count = 0
-            chunks = []
-            while 1:
-                frag = o.seq[count:count+block_len]
-                if not frag:
-                    break
-                chunks.append(frag)
-                count += block_len
-            tags.append(o.tag[:max_tag_len])
-            seqs.append(chunks)
-        return tags, seqs
 
     @classmethod
     def parse_string(cls, string, infmt='fasta'):
