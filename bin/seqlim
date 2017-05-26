@@ -81,9 +81,12 @@ if __name__ == '__main__':
     par.add_argument('-inexts', metavar='inexts', nargs='+')
     args = par.parse_args()
 
+    read_mode = "r"
     if args.read_gzipped:
         import gzip
         open_func = gzip.open
+        if sys.version_info >= (3,):
+            read_mode = "rt"
     else:
         open_func = open
 
@@ -101,7 +104,7 @@ if __name__ == '__main__':
                 outfilename = os.path.join(outdir, basename+'.'+args.outfmt)
                 Path.mkdir_p(outdir)
                 
-                with open_func(f, 'rt') as ifh:
+                with open_func(f, read_mode) as ifh:
                     with open(outfilename, "w") as ofh:
                         mseq = MSeq.parse(ifh, infmt=args.infmt)
                         if args.remove:
@@ -113,7 +116,7 @@ if __name__ == '__main__':
 
         else:
             # if args.i is a file, converts the file.
-            with open_func(args.i, 'rt') as ifh:
+            with open_func(args.i, read_mode) as ifh:
                 mseq = MSeq.parse(ifh, infmt=args.infmt)
                 if args.remove:
                     mseq.rm(args.remove)
@@ -135,7 +138,7 @@ if __name__ == '__main__':
         
         # make MSeq objects for files, and extend their Seq objects to the new MSeq object.
         for filename, _ in Path.listfiles_r(args.i, exts=args.inexts):
-            with open_func(filename, 'rt') as f:
+            with open_func(filename, read_mode) as f:
                 mseq.extend(MSeq.parse(f, infmt=args.infmt))
         
         if args.remove:
@@ -158,7 +161,7 @@ if __name__ == '__main__':
         mseqobs = []
         seq_num = None
         for filename, _ in Path.listfiles_r(args.i, exts=args.inexts):
-            with open_func(filename, 'rt') as f:
+            with open_func(filename, read_mode) as f:
                 _mseqob = MSeq.parse(f, infmt=args.infmt)
                 current_seq_num = len(_mseqob)
                 if seq_num is not None and current_seq_num != seq_num:
